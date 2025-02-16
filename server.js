@@ -4,8 +4,12 @@ const Database = require("./db");
 const messages = require("./lang/en/en");
 
 class Server {
-    constructor(port) {
-        this.port = process.env.PORT || port;
+    constructor() {
+        this.port = process.env.PORT;
+        if (!this.port) {
+            console.error("❌ ERROR: PORT is not set in environment variables!");
+            process.exit(1); 
+        }
         this.createServer();
     }
 
@@ -23,8 +27,18 @@ class Server {
             }
         });
 
+        // ✅ **检查端口是否被占用**
+        server.on("error", (err) => {
+            if (err.code === "EADDRINUSE") {
+                console.error(`❌ ERROR: Port ${this.port} is already in use!`);
+                process.exit(1);
+            } else {
+                console.error(`❌ Server Error: ${err.message}`);
+            }
+        });
+
         server.listen(this.port, () => {
-            console.log(`${messages.info.serverRunning} ${this.port}`);
+            console.log(`✅ ${messages.info.serverRunning} ${this.port}`);
         });
     }
 
@@ -39,7 +53,7 @@ class Server {
 
         Database.executeQuery(sqlQuery, (err, results) => {
             if (err) {
-                console.error("Database Query Error:", err);
+                console.error("❌ Database Query Error:", err);
                 res.writeHead(500);
                 return res.end(JSON.stringify({ error: messages.errors.selectError }));
             }
@@ -75,5 +89,4 @@ class Server {
     }
 }
 
-const port = process.env.PORT || 8080;
-new Server(port);
+new Server();
