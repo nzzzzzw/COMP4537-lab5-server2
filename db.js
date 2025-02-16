@@ -1,3 +1,8 @@
+/**
+ * DISCLAIMER: 
+ * This code was developed with the assistance of ChatGPT 
+ * for guidance and improvements.
+ */
 const mysql = require("mysql2");
 const messages = require("./lang/en/en");
 

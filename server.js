@@ -1,3 +1,8 @@
+/**
+ * DISCLAIMER: 
+ * This code was developed with the assistance of ChatGPT 
+ * for guidance and improvements.
+ */
 const http = require("http");
 const url = require("url");
 const Database = require("./db");
