@@ -5,11 +5,7 @@ const messages = require("./lang/en/en");
 
 class Server {
     constructor() {
-        this.port = process.env.PORT;
-        if (!this.port) {
-            console.error("❌ ERROR: PORT is not set in environment variables!");
-            process.exit(1); 
-        }
+        this.port = process.env.PORT || 8080;  
         this.createServer();
     }
 
@@ -27,7 +23,6 @@ class Server {
             }
         });
 
-        // ✅ **检查端口是否被占用**
         server.on("error", (err) => {
             if (err.code === "EADDRINUSE") {
                 console.error(`❌ ERROR: Port ${this.port} is already in use!`);
