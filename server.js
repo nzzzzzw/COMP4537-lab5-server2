@@ -54,20 +54,39 @@ class Server {
     handleGetRequest(req, res) {
         const queryObject = url.parse(req.url, true).query;
         const sqlQuery = queryObject.query;
-
-        if (!sqlQuery || !sqlQuery.toUpperCase().startsWith("SELECT")) {
+    
+        if (!sqlQuery) {
+            res.writeHead(400);
+            return res.end(JSON.stringify({ error: "No query provided." }));
+        }
+    
+        if (sqlQuery.toUpperCase().startsWith("SELECT")) {
+            Database.executeQuery(sqlQuery, (err, results) => {
+                if (err) {
+                    console.error("❌ Database Query Error:", err);
+                    res.writeHead(500);
+                    return res.end(JSON.stringify({ error: messages.errors.selectError }));
+                }
+                res.end(JSON.stringify({ success: messages.success.querySuccess, data: results }));
+            });
+        } else if (sqlQuery.toUpperCase().startsWith("INSERT")) {
+            const key = queryObject.key;
+            if (key !== "myStrongSecret123") { 
+                res.writeHead(403);
+                return res.end(JSON.stringify({ error: "Forbidden. Invalid key." }));
+            }
+    
+            Database.executeQuery(sqlQuery, (err, results) => {
+                if (err) {
+                    res.writeHead(500);
+                    return res.end(JSON.stringify({ error: messages.errors.insertError }));
+                }
+                res.end(JSON.stringify({ success: messages.success.insertSuccess }));
+            });
+        } else {
             res.writeHead(403);
             return res.end(JSON.stringify({ error: messages.errors.forbiddenQuery }));
         }
-
-        Database.executeQuery(sqlQuery, (err, results) => {
-            if (err) {
-                console.error("❌ Database Query Error:", err);
-                res.writeHead(500);
-                return res.end(JSON.stringify({ error: messages.errors.selectError }));
-            }
-            res.end(JSON.stringify({ success: messages.success.querySuccess, data: results }));
-        });
     }
 
     handlePostRequest(req, res) {

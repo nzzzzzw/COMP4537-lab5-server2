@@ -27,6 +27,7 @@ class Database {
                 process.exit(1);
             }
             console.log(messages.info.dbConnected);
+            this.createTable();  
         });
     }
 
@@ -44,6 +45,23 @@ class Database {
     closeConnection() {
         this.connection.end(err => {
             if (err) console.error("Error closing database connection:", err);
+        });
+    }
+
+
+    createTable() {
+        const sql = `
+        CREATE TABLE IF NOT EXISTS patient (
+            patientid INT AUTO_INCREMENT PRIMARY KEY,
+            name VARCHAR(100) NOT NULL,
+            dateOfBirth DATETIME NOT NULL
+        );`;
+        this.connection.query(sql, (err) => {
+            if (err) {
+                console.error("❌ Error creating patient table:", err);
+            } else {
+                console.log("✅ Patient table is ready.");
+            }
         });
     }
 }
