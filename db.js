@@ -5,7 +5,7 @@ class Database {
     constructor() {
         this.connection = mysql.createConnection({
         host: "64.23.247.155",
-        user: "root",
+        user: "lab5user",
         password: "",  
         database: "lab5db",
         port: 3306,
