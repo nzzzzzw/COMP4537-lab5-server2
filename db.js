@@ -4,7 +4,7 @@ const messages = require("./lang/en/en");
 class Database {
     constructor() {
         this.connection = mysql.createConnection({
-        host: "localhost",
+        host: "64.23.247.155",
         user: "root",
         password: "",  
         database: "lab5db",
