@@ -104,12 +104,14 @@ class Server {
 
                 Database.executeQuery(sqlQuery, (err, results) => {
                     if (err) {
+                        console.error("❌ Database Query Error:", err);
                         res.writeHead(500);
                         return res.end(JSON.stringify({ error: messages.errors.insertError }));
                     }
                     res.end(JSON.stringify({ success: messages.success.insertSuccess }));
                 });
             } catch (error) {
+                console.error("❌ JSON Parsing Error:", error);
                 res.writeHead(400);
                 res.end(JSON.stringify({ error: messages.errors.invalidQuery }));
             }
