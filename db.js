@@ -1,3 +1,8 @@
+/**
+ * DISCLAIMER: 
+ * This code was developed with the assistance of ChatGPT 
+ * for guidance and improvements.
+ */
 const mysql = require("mysql2");
 
 class Database {
@@ -26,18 +31,18 @@ class Database {
     connect() {
         this.connection.connect(err => {
             if (err) {
-                console.error("❌ Database Connection Error:", err);
+                console.error("Database Connection Error:", err);
                 setTimeout(() => this.connect(), 5000);
             } else {
-                console.log("✅ Connected to MySQL as `lab5user`.");
+                console.log("Connected to MySQL as `lab5user`.");
             }
         });
 
         this.creatorConnection.connect(err => {
             if (err) {
-                console.error("❌ Creator User Connection Error:", err);
+                console.error("Creator User Connection Error:", err);
             } else {
-                console.log("✅ Connected to MySQL as `creator_user`.");
+                console.log("Connected to MySQL as `creator_user`.");
             }
         });
 
@@ -53,7 +58,7 @@ class Database {
 
         this.creatorConnection.query(checkTableQuery, (err, results) => {
             if (err) {
-                console.error("❌ Error checking table existence:", err);
+                console.error("Error checking table existence:", err);
                 return callback(err);
             }
 
@@ -70,10 +75,10 @@ class Database {
 
                 this.creatorConnection.query(createTableQuery, err => {
                     if (err) {
-                        console.error("❌ Error creating patient table:", err);
+                        console.error("Error creating patient table:", err);
                         return callback(err);
                     }
-                    console.log("✅ Patient table created successfully.");
+                    console.log("Patient table created successfully.");
                     callback(null);
                 });
             } else {

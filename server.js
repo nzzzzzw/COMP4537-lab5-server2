@@ -39,15 +39,15 @@ class Server {
 
         server.on("error", (err) => {
             if (err.code === "EADDRINUSE") {
-                console.error(`❌ ERROR: Port ${this.port} is already in use!`);
+                console.error(`ERROR: Port ${this.port} is already in use!`);
                 process.exit(1);
             } else {
-                console.error(`❌ Server Error: ${err.message}`);
+                console.error(`Server Error: ${err.message}`);
             }
         });
 
         server.listen(this.port, () => {
-            console.log(`✅ ${messages.info.serverRunning} ${this.port}`);
+            console.log(`${messages.info.serverRunning} ${this.port}`);
         });
     }
 
@@ -63,7 +63,7 @@ class Server {
         if (sqlQuery.toUpperCase().startsWith("SELECT")) {
             Database.executeQuery(sqlQuery, (err, results) => {
                 if (err) {
-                    console.error("❌ Database Query Error:", err);
+                    console.error("Database Query Error:", err);
                     res.writeHead(500);
                     return res.end(JSON.stringify({ error: messages.errors.selectError }));
                 }
@@ -88,7 +88,7 @@ class Server {
                     return res.end(JSON.stringify({ error: messages.errors.forbiddenQuery }));
                 }
 
-                // 🔹 确保 `patient` 表存在后再执行插入操作
+                // make sure the `patient` exists and create it if it doesn't
                 Database.checkAndCreateTable((err) => {
                     if (err) {
                         res.writeHead(500);
