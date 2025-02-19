@@ -88,7 +88,6 @@ class Server {
                     return res.end(JSON.stringify({ error: messages.errors.forbiddenQuery }));
                 }
 
-                // make sure the `patient` exists and create it if it doesn't
                 Database.checkAndCreateTable((err) => {
                     if (err) {
                         res.writeHead(500);
