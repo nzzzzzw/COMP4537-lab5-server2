@@ -6,6 +6,7 @@
 const http = require("http");
 const url = require("url");
 const Database = require("./db");
+const messages = require("./lang/en/en");
 
 class Server {
     constructor() {
@@ -32,12 +33,12 @@ class Server {
                 this.handlePostRequest(req, res);
             } else {
                 res.writeHead(405);
-                res.end(JSON.stringify({ error: "❌ Method not allowed." }));
+                res.end(JSON.stringify({ error: messages.errors.invalidQuery }));
             }
         });
 
         server.listen(this.port, () => {
-            console.log(`✅ Server running on port ${this.port}`);
+            console.log(`${messages.info.serverRunning} ${this.port}`);
         });
     }
 
@@ -47,21 +48,21 @@ class Server {
 
         if (!sqlQuery) {
             res.writeHead(400);
-            return res.end(JSON.stringify({ error: "❌ No query provided." }));
+            return res.end(JSON.stringify({ error: messages.errors.invalidQuery }));
         }
 
         if (sqlQuery.toUpperCase().startsWith("SELECT")) {
             Database.executeQuery(sqlQuery, (err, results) => {
                 if (err) {
-                    console.error("❌ Database Query Error:", err);
+                    console.error(messages.errors.selectError, err);
                     res.writeHead(500);
-                    return res.end(JSON.stringify({ error: "❌ SELECT query failed." }));
+                    return res.end(JSON.stringify({ error: messages.errors.selectError }));
                 }
-                res.end(JSON.stringify({ success: "✅ Query executed successfully.", data: results }));
+                res.end(JSON.stringify({ success: messages.success.querySuccess, data: results }));
             });
         } else {
             res.writeHead(403);
-            return res.end(JSON.stringify({ error: "❌ Forbidden query type." }));
+            return res.end(JSON.stringify({ error: messages.errors.forbiddenQuery }));
         }
     }
 
@@ -75,26 +76,25 @@ class Server {
 
                 if (!sqlQuery || !sqlQuery.toUpperCase().startsWith("INSERT")) {
                     res.writeHead(403);
-                    return res.end(JSON.stringify({ error: "❌ Forbidden query." }));
+                    return res.end(JSON.stringify({ error: messages.errors.forbiddenQuery }));
                 }
 
-                // **确保表存在**
+                // check the table and create if it doesn't exist
                 await Database.checkAndCreateTable();
 
-                // **保留普通 INSERT INTO，保证每次点击都会插入**
                 Database.executeQuery(sqlQuery, (err, results) => {
                     if (err) {
-                        console.error("❌ Database Query Error:", err);
+                        console.error(messages.errors.insertError, err);
                         res.writeHead(500);
-                        return res.end(JSON.stringify({ error: "❌ INSERT failed." }));
+                        return res.end(JSON.stringify({ error: messages.errors.insertError }));
                     }
-                    res.end(JSON.stringify({ success: "✅ Data inserted successfully." }));
+                    res.end(JSON.stringify({ success: messages.success.insertSuccess }));
                 });
 
             } catch (error) {
-                console.error("❌ JSON Parsing Error:", error);
+                console.error(messages.errors.invalidQuery, error);
                 res.writeHead(400);
-                res.end(JSON.stringify({ error: "❌ Invalid JSON format." }));
+                res.end(JSON.stringify({ error: messages.errors.invalidQuery }));
             }
         });
     }

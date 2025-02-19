@@ -1,4 +1,11 @@
+/**
+ * DISCLAIMER: 
+ * This code was developed with the assistance of ChatGPT 
+ * for guidance and improvements.
+ */
 const mysql = require("mysql2");
+const messages = require("./lang/en/en");
+
 
 class Database {
     constructor() {
@@ -24,18 +31,18 @@ class Database {
     connect() {
         this.userConnection.connect(err => {
             if (err) {
-                console.error("❌ Database Connection Error (lab5user):", err);
+                console.error(messages.errors.dbConnectionError, err);
                 setTimeout(() => this.connect(), 5000);
             } else {
-                console.log("✅ Connected to MySQL as `lab5user`.");
+                console.log(`${messages.info.dbConnected} (lab5user)`);
             }
         });
 
         this.creatorConnection.connect(err => {
             if (err) {
-                console.error("❌ Database Connection Error (creator_user):", err);
+                console.error(messages.errors.dbConnectionError, err);
             } else {
-                console.log("✅ Connected to MySQL as `creator_user`.");
+                console.log(` ${messages.info.dbConnected} (creator_user)`);
             }
         });
 
@@ -52,12 +59,12 @@ class Database {
 
             this.creatorConnection.query(checkTableQuery, (err, results) => {
                 if (err) {
-                    console.error("❌ Error checking table existence:", err);
+                    console.error(messages.errors.dbConnectionError, err);
                     return reject(err);
                 }
 
                 if (results[0].tableExists === 0) {
-                    console.log("⚠️ Patient table does not exist. Creating...");
+                    console.log("Patient table does not exist. Creating...");
 
                     const createTableQuery = `
                         CREATE TABLE patient (
@@ -69,10 +76,10 @@ class Database {
 
                     this.creatorConnection.query(createTableQuery, err => {
                         if (err) {
-                            console.error("❌ Error creating patient table:", err);
+                            console.error(messages.errors.dbConnectionError, err);
                             return reject(err);
                         }
-                        console.log("✅ Patient table created successfully.");
+                        console.log("Patient table created successfully.");
                         resolve();
                     });
                 } else {
@@ -85,7 +92,7 @@ class Database {
     executeQuery(sql, callback) {
         const forbiddenCommands = ["UPDATE", "DELETE", "DROP"];
         if (forbiddenCommands.some(cmd => sql.toUpperCase().includes(cmd))) {
-            return callback(new Error("❌ Forbidden query! UPDATE, DELETE, DROP are not allowed."), null);
+            return callback(new Error(messages.errors.forbiddenQuery), null);
         }
 
         this.userConnection.query(sql, (err, results) => {
