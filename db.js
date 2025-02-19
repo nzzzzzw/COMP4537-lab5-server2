@@ -2,70 +2,82 @@ const mysql = require("mysql2");
 
 class Database {
     constructor() {
-        this.initCreatorConnection();
-    }
-
-    // using creator_user check and create table
-    initCreatorConnection() {
-        const creatorConnection = mysql.createConnection({
+        this.creatorConnection = mysql.createConnection({
             host: "64.23.247.155",
             user: "creator_user",  
-            password: "",  
+            password: "",
             database: "lab5db",
-            port: 3306
+            port: 3306,
+            multipleStatements: true
         });
 
-        creatorConnection.connect(err => {
-            if (err) {
-                console.error("❌ Creator User Database Connection Error:", err);
-                return;
-            }
-            console.log("✅ Connected as creator_user.");
-            this.createTable(creatorConnection);
-        });
-    }
-
-    createTable(connection) {
-        const sql = `
-        CREATE TABLE IF NOT EXISTS patient (
-            patientid INT AUTO_INCREMENT PRIMARY KEY,
-            name VARCHAR(100) NOT NULL UNIQUE,
-            dateOfBirth DATETIME NOT NULL
-        );`;
-        connection.query(sql, err => {
-            if (err) {
-                console.error("❌ Error creating patient table:", err);
-            } else {
-                console.log("✅ Patient table is ready.");
-            }
-            connection.end(); 
-            this.initLab5UserConnection(); // to use lab5user connection
-        });
-    }
-
-    // using lab5user conncection to execute queries
-    initLab5UserConnection() {
         this.connection = mysql.createConnection({
             host: "64.23.247.155",
-            user: "lab5user",
-            password: "",  
+            user: "lab5user",  
+            password: "",
             database: "lab5db",
-            port: 3306
+            port: 3306,
+            multipleStatements: true
         });
 
+        this.connect();
+    }
+
+    connect() {
         this.connection.connect(err => {
             if (err) {
-                console.error("❌ lab5user Database Connection Error:", err);
-                setTimeout(() => this.initLab5UserConnection(), 5000); 
+                console.error("❌ Database Connection Error:", err);
+                setTimeout(() => this.connect(), 5000);
             } else {
-                console.log("✅ Connected to MySQL as lab5user.");
+                console.log("✅ Connected to MySQL as `lab5user`.");
+            }
+        });
+
+        this.creatorConnection.connect(err => {
+            if (err) {
+                console.error("❌ Creator User Connection Error:", err);
+            } else {
+                console.log("✅ Connected to MySQL as `creator_user`.");
             }
         });
 
         this.connection.on("error", err => {
-            console.error("⚠️ Database error:", err);
             if (err.code === "PROTOCOL_CONNECTION_LOST") {
-                this.initLab5UserConnection(); 
+                this.connect();
+            }
+        });
+    }
+
+    checkAndCreateTable(callback) {
+        const checkTableQuery = `SHOW TABLES LIKE 'patient';`;
+
+        this.creatorConnection.query(checkTableQuery, (err, results) => {
+            if (err) {
+                console.error("❌ Error checking table existence:", err);
+                return callback(err);
+            }
+
+            if (results.length === 0) {
+                console.log("⚠️ Patient table does not exist. Creating...");
+
+                const createTableQuery = `
+                    CREATE TABLE patient (
+                        patientid INT AUTO_INCREMENT PRIMARY KEY,
+                        name VARCHAR(100) NOT NULL UNIQUE,
+                        dateOfBirth DATETIME NOT NULL
+                    );
+                `;
+
+                this.creatorConnection.query(createTableQuery, err => {
+                    if (err) {
+                        console.error("❌ Error creating patient table:", err);
+                        return callback(err);
+                    }
+                    console.log("✅ Patient table created successfully.");
+                    callback(null);
+                });
+            } else {
+                callback(null);
             }
         });
     }
@@ -84,6 +96,9 @@ class Database {
     closeConnection() {
         this.connection.end(err => {
             if (err) console.error("Error closing database connection:", err);
+        });
+        this.creatorConnection.end(err => {
+            if (err) console.error("Error closing creator database connection:", err);
         });
     }
 }
