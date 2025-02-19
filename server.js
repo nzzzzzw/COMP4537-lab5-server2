@@ -6,7 +6,6 @@
 const http = require("http");
 const url = require("url");
 const Database = require("./db");
-const messages = require("./lang/en/en");
 
 class Server {
     constructor() {
@@ -33,21 +32,12 @@ class Server {
                 this.handlePostRequest(req, res);
             } else {
                 res.writeHead(405);
-                res.end(JSON.stringify({ error: "Method not allowed." }));
-            }
-        });
-
-        server.on("error", (err) => {
-            if (err.code === "EADDRINUSE") {
-                console.error(`ERROR: Port ${this.port} is already in use!`);
-                process.exit(1);
-            } else {
-                console.error(`Server Error: ${err.message}`);
+                res.end(JSON.stringify({ error: "❌ Method not allowed." }));
             }
         });
 
         server.listen(this.port, () => {
-            console.log(`${messages.info.serverRunning} ${this.port}`);
+            console.log(`✅ Server running on port ${this.port}`);
         });
     }
 
@@ -57,57 +47,54 @@ class Server {
 
         if (!sqlQuery) {
             res.writeHead(400);
-            return res.end(JSON.stringify({ error: "No query provided." }));
+            return res.end(JSON.stringify({ error: "❌ No query provided." }));
         }
 
         if (sqlQuery.toUpperCase().startsWith("SELECT")) {
             Database.executeQuery(sqlQuery, (err, results) => {
                 if (err) {
-                    console.error("Database Query Error:", err);
+                    console.error("❌ Database Query Error:", err);
                     res.writeHead(500);
-                    return res.end(JSON.stringify({ error: messages.errors.selectError }));
+                    return res.end(JSON.stringify({ error: "❌ SELECT query failed." }));
                 }
-                res.end(JSON.stringify({ success: messages.success.querySuccess, data: results }));
+                res.end(JSON.stringify({ success: "✅ Query executed successfully.", data: results }));
             });
         } else {
             res.writeHead(403);
-            return res.end(JSON.stringify({ error: messages.errors.forbiddenQuery }));
+            return res.end(JSON.stringify({ error: "❌ Forbidden query type." }));
         }
     }
 
-    handlePostRequest(req, res) {
+    async handlePostRequest(req, res) {
         let body = "";
         req.on("data", chunk => { body += chunk; });
-        req.on("end", () => {
+        req.on("end", async () => {
             try {
                 const data = JSON.parse(body);
-                const sqlQuery = data.query;
+                let sqlQuery = data.query;
 
                 if (!sqlQuery || !sqlQuery.toUpperCase().startsWith("INSERT")) {
                     res.writeHead(403);
-                    return res.end(JSON.stringify({ error: messages.errors.forbiddenQuery }));
+                    return res.end(JSON.stringify({ error: "❌ Forbidden query." }));
                 }
 
-                Database.checkAndCreateTable((err) => {
-                    if (err) {
-                        res.writeHead(500);
-                        return res.end(JSON.stringify({ error: "Error ensuring table exists." }));
-                    }
+                // **确保表存在**
+                await Database.checkAndCreateTable();
 
-                    Database.executeQuery(sqlQuery, (err, results) => {
-                        if (err) {
-                            console.error("❌ Database Query Error:", err);
-                            res.writeHead(500);
-                            return res.end(JSON.stringify({ error: messages.errors.insertError }));
-                        }
-                        res.end(JSON.stringify({ success: messages.success.insertSuccess }));
-                    });
+                // **保留普通 INSERT INTO，保证每次点击都会插入**
+                Database.executeQuery(sqlQuery, (err, results) => {
+                    if (err) {
+                        console.error("❌ Database Query Error:", err);
+                        res.writeHead(500);
+                        return res.end(JSON.stringify({ error: "❌ INSERT failed." }));
+                    }
+                    res.end(JSON.stringify({ success: "✅ Data inserted successfully." }));
                 });
 
             } catch (error) {
                 console.error("❌ JSON Parsing Error:", error);
                 res.writeHead(400);
-                res.end(JSON.stringify({ error: messages.errors.invalidQuery }));
+                res.end(JSON.stringify({ error: "❌ Invalid JSON format." }));
             }
         });
     }

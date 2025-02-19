@@ -46,48 +46,46 @@ class Database {
         });
     }
 
-    checkAndCreateTable(callback) {
-        const checkTableQuery = `
-            SELECT COUNT(*) AS tableExists 
-            FROM information_schema.tables 
-            WHERE table_schema = 'lab5db' AND table_name = 'patient';
-        `;
+    async checkAndCreateTable() {
+        return new Promise((resolve, reject) => {
+            const checkTableQuery = `SELECT COUNT(*) AS tableExists FROM information_schema.tables WHERE table_schema = 'lab5db' AND table_name = 'patient';`;
 
-        this.creatorConnection.query(checkTableQuery, (err, results) => {
-            if (err) {
-                console.error("❌ Error checking table existence:", err);
-                return callback(err);
-            }
+            this.creatorConnection.query(checkTableQuery, (err, results) => {
+                if (err) {
+                    console.error("❌ Error checking table existence:", err);
+                    return reject(err);
+                }
 
-            if (results[0].tableExists === 0) {
-                console.log("⚠️ Patient table does not exist. Creating...");
+                if (results[0].tableExists === 0) {
+                    console.log("⚠️ Patient table does not exist. Creating...");
 
-                const createTableQuery = `
-                    CREATE TABLE patient (
-                        patientid INT AUTO_INCREMENT PRIMARY KEY,
-                        name VARCHAR(100) NOT NULL UNIQUE,
-                        dateOfBirth DATETIME NOT NULL
-                    );
-                `;
+                    const createTableQuery = `
+                        CREATE TABLE patient (
+                            patientid INT AUTO_INCREMENT PRIMARY KEY,
+                            name VARCHAR(100) NOT NULL,
+                            dateOfBirth DATETIME NOT NULL
+                        );
+                    `;
 
-                this.creatorConnection.query(createTableQuery, err => {
-                    if (err) {
-                        console.error("❌ Error creating patient table:", err);
-                        return callback(err);
-                    }
-                    console.log("✅ Patient table created successfully.");
-                    callback(null);
-                });
-            } else {
-                callback(null);
-            }
+                    this.creatorConnection.query(createTableQuery, err => {
+                        if (err) {
+                            console.error("❌ Error creating patient table:", err);
+                            return reject(err);
+                        }
+                        console.log("✅ Patient table created successfully.");
+                        resolve();
+                    });
+                } else {
+                    resolve();
+                }
+            });
         });
     }
 
     executeQuery(sql, callback) {
         const forbiddenCommands = ["UPDATE", "DELETE", "DROP"];
         if (forbiddenCommands.some(cmd => sql.toUpperCase().includes(cmd))) {
-            return callback(new Error("Forbidden query! UPDATE, DELETE, DROP are not allowed."), null);
+            return callback(new Error("❌ Forbidden query! UPDATE, DELETE, DROP are not allowed."), null);
         }
 
         this.userConnection.query(sql, (err, results) => {
